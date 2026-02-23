@@ -1,0 +1,35 @@
+<div class="movie-grid">
+{% for movie in movies %}
+  <div class="movie-card {% if movie.is_synced %}synced{% endif %}">
+    {% if movie.is_synced %}<div class="synced-badge">&#10003; Synced</div>{% endif %}
+    <div class="movie-poster-placeholder">&#127916;</div>
+    <div class="movie-info">
+      <div class="movie-title">{{ movie.title }}</div>
+      <div class="movie-meta">
+        {% if let Some(y) = movie.year %}{{ y }} &middot; {% endif %}{{ movie.human_size() }}
+      </div>
+    </div>
+    {% if !movie.is_synced %}
+    <div class="movie-actions">
+      {% if movie.has_file() %}
+      <form hx-post="/queue" hx-target="body" hx-swap="none">
+        <input type="hidden" name="plex_rating_key" value="{{ movie.rating_key }}">
+        <input type="hidden" name="media_type" value="movie">
+        <input type="hidden" name="title" value="{{ movie.title }}">
+        <input type="hidden" name="file_size_bytes" value="{{ movie.file_size }}">
+        <input type="hidden" name="source_url" value="{{ movie.file_key_str() }}">
+        <button type="submit" class="btn btn-primary btn-sm" style="width:100%;">+ Queue</button>
+      </form>
+      {% else %}
+      <span style="color:#555;font-size:0.75rem;">No file</span>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+{% endfor %}
+{% if movies.is_empty() %}
+<p style="color:#666;grid-column:1/-1;text-align:center;padding:40px 0;">
+  No movies found. Check your home server in <a href="/settings">Settings</a>.
+</p>
+{% endif %}
+</div>

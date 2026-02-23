@@ -1,0 +1,33 @@
+{% for job in jobs %}
+<tr id="job-{{ job.id }}">
+  <td>{{ job.display_title() }}</td>
+  <td style="white-space:nowrap;">{{ job.human_size() }}</td>
+  <td class="job-status">
+    {% if job.status == "queued" %}<span class="badge badge-gray">Queued</span>
+    {% else if job.status == "downloading" %}<span class="badge badge-blue">Downloading</span>
+    {% else if job.status == "complete" %}<span class="badge badge-green">Complete</span>
+    {% else if job.status == "failed" %}
+      <span class="badge badge-red">Failed</span>
+      {% if job.has_error() %}<span class="error-msg" title="{{ job.error_str() }}">&#9888;</span>{% endif %}
+    {% else if job.status == "cancelled" %}<span class="badge badge-gray">Cancelled</span>
+    {% else %}<span class="badge badge-gray">{{ job.status }}</span>{% endif %}
+  </td>
+  <td class="job-progress">
+    <div class="progress-bar"><div class="progress-fill" style="width:{{ job.progress_pct_str() }}%"></div></div>
+    <span class="progress-text">{{ job.progress_pct_str() }}%</span>
+  </td>
+  <td class="job-speed">—</td>
+  <td>
+    {% if job.status == "queued" || job.status == "downloading" %}
+    <button class="btn btn-danger btn-sm"
+      hx-delete="/queue/{{ job.id }}"
+      hx-target="#queue-tbody"
+      hx-confirm="Cancel this download?">Cancel</button>
+    {% else if job.status == "failed" %}
+    <button class="btn btn-secondary btn-sm"
+      hx-post="/queue/{{ job.id }}/retry"
+      hx-target="#queue-tbody">Retry</button>
+    {% endif %}
+  </td>
+</tr>
+{% endfor %}

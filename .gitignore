@@ -1,0 +1,17 @@
+/target/
+
+# SQLite databases and WAL files
+*.db
+*.db-shm
+*.db-wal
+
+# Environment / secrets
+.env
+
+# macOS
+.DS_Store
+
+# Editor directories
+.idea/
+.vscode/
+.claude/

@@ -1,0 +1,36 @@
+{% for (season, episodes) in episodes_by_season %}
+<div class="season-header">{{ season.title }}</div>
+{% for ep in episodes %}
+<div class="episode-row">
+  <span class="episode-num">{{ ep.season_label() }}{{ ep.episode_label() }}</span>
+  <span class="episode-title">
+    {{ ep.title }}
+    {% if ep.is_synced %}<span class="badge badge-green" style="font-size:0.65rem;">&#10003;</span>{% endif %}
+  </span>
+  <span class="episode-size">{{ ep.human_size() }}</span>
+  {% if !ep.is_synced %}
+  {% if ep.has_file() %}
+  <form hx-post="/queue" hx-target="body" hx-swap="none" style="margin:0;">
+    <input type="hidden" name="plex_rating_key" value="{{ ep.rating_key }}">
+    <input type="hidden" name="media_type" value="episode">
+    <input type="hidden" name="title" value="{{ ep.title }}">
+    {% if ep.has_grandparent() %}
+    <input type="hidden" name="show_title" value="{{ ep.grandparent_str() }}">
+    {% endif %}
+    <input type="hidden" name="season_number" value="{{ ep.season_num() }}">
+    <input type="hidden" name="episode_number" value="{{ ep.episode_num() }}">
+    <input type="hidden" name="file_size_bytes" value="{{ ep.file_size }}">
+    <input type="hidden" name="source_url" value="{{ ep.file_key_str() }}">
+    <button type="submit" class="btn btn-primary btn-sm">+ Queue</button>
+  </form>
+  {% endif %}
+  {% endif %}
+</div>
+{% endfor %}
+{% if episodes.is_empty() %}
+<p style="color:#666;padding:8px 0;font-size:0.8rem;">No episodes found.</p>
+{% endif %}
+{% endfor %}
+{% if episodes_by_season.is_empty() %}
+<p style="color:#666;padding:8px 0;">No seasons found.</p>
+{% endif %}

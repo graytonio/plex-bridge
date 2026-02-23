@@ -1,0 +1,13 @@
+target/
+.git/
+.github/
+.claude/
+.gitignore
+.dockerignore
+README.md
+CLAUDE.md
+*.db
+*.db-shm
+*.db-wal
+.env
+.DS_Store

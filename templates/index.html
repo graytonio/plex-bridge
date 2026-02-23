@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %} — Dashboard{% endblock %}
+{% block content %}
+<div hx-ext="sse" sse-connect="/events">
+  <h1 class="page-title">Dashboard</h1>
+
+  <div class="stats-bar"
+       hx-get="/queue/stats"
+       hx-trigger="every 2s"
+       hx-swap="innerHTML">
+    {% include "partials/queue_stats.html" %}
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div class="card-title">Sync Queue</div>
+      {% if complete_count > 0 %}
+      <form method="post" action="/clear-completed" style="display:inline;">
+        <button type="submit" class="btn btn-secondary btn-sm">Clear Completed</button>
+      </form>
+      {% endif %}
+    </div>
+
+    {% if jobs.is_empty() %}
+    <p style="color:#666;text-align:center;padding:24px 0;">No jobs yet. <a href="/browse">Browse your library</a> to start syncing.</p>
+    {% else %}
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Size</th>
+          <th>Status</th>
+          <th>Progress</th>
+          <th>Speed</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="queue-tbody"
+             hx-get="/queue/list"
+             hx-trigger="every 2s"
+             hx-swap="innerHTML">
+        {% for job in jobs %}
+        <tr id="job-{{ job.id }}">
+          <td>{{ job.display_title() }}</td>
+          <td style="white-space:nowrap;">{{ job.human_size() }}</td>
+          <td class="job-status">
+            {% if job.status == "queued" %}<span class="badge badge-gray">Queued</span>
+            {% else if job.status == "downloading" %}<span class="badge badge-blue">Downloading</span>
+            {% else if job.status == "complete" %}<span class="badge badge-green">Complete</span>
+            {% else if job.status == "failed" %}
+              <span class="badge badge-red">Failed</span>
+              {% if job.has_error() %}<span class="error-msg" title="{{ job.error_str() }}">&#9888;</span>{% endif %}
+            {% else if job.status == "cancelled" %}<span class="badge badge-gray">Cancelled</span>
+            {% else %}<span class="badge badge-gray">{{ job.status }}</span>{% endif %}
+          </td>
+          <td class="job-progress">
+            <div class="progress-bar"><div class="progress-fill" style="width:{{ job.progress_pct_str() }}%"></div></div>
+            <span class="progress-text">{{ job.progress_pct_str() }}%</span>
+          </td>
+          <td class="job-speed">—</td>
+          <td>
+            {% if job.status == "queued" || job.status == "downloading" %}
+            <button class="btn btn-danger btn-sm"
+              hx-delete="/queue/{{ job.id }}"
+              hx-target="#queue-tbody"
+              hx-confirm="Cancel this download?">Cancel</button>
+            {% else if job.status == "failed" %}
+            <button class="btn btn-secondary btn-sm"
+              hx-post="/queue/{{ job.id }}/retry"
+              hx-target="#queue-tbody">Retry</button>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

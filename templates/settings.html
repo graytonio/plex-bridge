@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %} — Settings{% endblock %}
+{% block content %}
+<h1 class="page-title">Settings</h1>
+
+{% if saved %}
+<div class="alert alert-success">Settings saved successfully.</div>
+{% endif %}
+
+{% if let Some(err) = test_error %}
+<div class="alert alert-error">{{ err }}</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-title">Home Plex Server</div>
+  <form method="post" action="/settings">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="home_server_url">Home Server URL</label>
+        <input class="form-input" type="url" id="home_server_url" name="home_server_url"
+          value="{{ config.home_server_url }}"
+          placeholder="http://192.168.1.10:32400">
+        <div class="form-hint">Full URL including port, no trailing slash</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="home_plex_token">Plex Token</label>
+        <input class="form-input" type="password" id="home_plex_token" name="home_plex_token"
+          value="{{ config.home_plex_token }}"
+          placeholder="xxxxxxxxxxxxxxxxxxxx">
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <button type="button" class="btn btn-secondary btn-sm"
+        hx-post="/settings/test"
+        hx-include="#home_server_url,#home_plex_token"
+        hx-target="#test-result"
+        hx-indicator="#test-spinner">
+        Test Connection <span id="test-spinner" class="htmx-indicator">&#8987;</span>
+      </button>
+      <div id="test-result" style="margin-top:8px;">
+        {% if let Some(r) = test_result %}
+        <div class="test-result success">{{ r }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card-title" style="margin-top:20px;">Local Plex Server</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="local_server_url">Local Server URL</label>
+        <input class="form-input" type="url" id="local_server_url" name="local_server_url"
+          value="{{ config.local_server_url }}"
+          placeholder="http://localhost:32400">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="local_plex_token">Local Plex Token</label>
+        <input class="form-input" type="password" id="local_plex_token" name="local_plex_token"
+          value="{{ config.local_plex_token }}"
+          placeholder="xxxxxxxxxxxxxxxxxxxx">
+      </div>
+    </div>
+
+    <div class="card-title" style="margin-top:20px;">Library Paths</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="movies_path">Movies Path</label>
+        <input class="form-input" type="text" id="movies_path" name="movies_path"
+          value="{{ config.movies_path }}"
+          placeholder="/mnt/media/Movies">
+        <div class="form-hint">Absolute path to local movies folder</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="tv_path">TV Shows Path</label>
+        <input class="form-input" type="text" id="tv_path" name="tv_path"
+          value="{{ config.tv_path }}"
+          placeholder="/mnt/media/TV">
+        <div class="form-hint">Absolute path to local TV folder</div>
+      </div>
+    </div>
+
+    <div class="form-group" style="max-width:200px;">
+      <label class="form-label" for="max_concurrent">Max Concurrent Downloads</label>
+      <select class="form-input" id="max_concurrent" name="max_concurrent">
+        <option value="1" {% if config.max_concurrent == 1 %}selected{% endif %}>1</option>
+        <option value="2" {% if config.max_concurrent == 2 %}selected{% endif %}>2</option>
+        <option value="3" {% if config.max_concurrent == 3 %}selected{% endif %}>3</option>
+        <option value="4" {% if config.max_concurrent == 4 %}selected{% endif %}>4</option>
+        <option value="5" {% if config.max_concurrent == 5 %}selected{% endif %}>5</option>
+      </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save Settings</button>
+  </form>
+</div>
+{% endblock %}

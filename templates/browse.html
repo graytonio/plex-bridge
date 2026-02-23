@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %} — Browse{% endblock %}
+{% block content %}
+<h1 class="page-title">Browse Library</h1>
+
+<div class="tab-bar">
+  <div class="tab {% if tab == "movies" %}active{% endif %}"
+    hx-get="/browse/movies"
+    hx-target="#browse-content"
+    onclick="setTab(this)">Movies ({{ movies.len() }})</div>
+  <div class="tab {% if tab == "shows" %}active{% endif %}"
+    hx-get="/browse/shows"
+    hx-target="#browse-content"
+    onclick="setTab(this)">TV Shows ({{ shows.len() }})</div>
+</div>
+
+<div id="browse-content">
+{% if tab == "movies" %}
+<div class="movie-grid">
+{% for movie in movies %}
+  <div class="movie-card {% if movie.is_synced %}synced{% endif %}">
+    {% if movie.is_synced %}<div class="synced-badge">&#10003; Synced</div>{% endif %}
+    <div class="movie-poster-placeholder">&#127916;</div>
+    <div class="movie-info">
+      <div class="movie-title">{{ movie.title }}</div>
+      <div class="movie-meta">
+        {% if let Some(y) = movie.year %}{{ y }} &middot; {% endif %}{{ movie.human_size() }}
+      </div>
+    </div>
+    {% if !movie.is_synced %}
+    <div class="movie-actions">
+      {% if movie.has_file() %}
+      <form hx-post="/queue" hx-target="body" hx-swap="none">
+        <input type="hidden" name="plex_rating_key" value="{{ movie.rating_key }}">
+        <input type="hidden" name="media_type" value="movie">
+        <input type="hidden" name="title" value="{{ movie.title }}">
+        <input type="hidden" name="file_size_bytes" value="{{ movie.file_size }}">
+        <input type="hidden" name="source_url" value="{{ movie.file_key_str() }}">
+        <button type="submit" class="btn btn-primary btn-sm" style="width:100%;">+ Queue</button>
+      </form>
+      {% else %}
+      <span style="color:#555;font-size:0.75rem;">No file</span>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+{% endfor %}
+{% if movies.is_empty() %}
+<p style="color:#666;grid-column:1/-1;text-align:center;padding:40px 0;">
+  No movies found. Check your home server in <a href="/settings">Settings</a>.
+</p>
+{% endif %}
+</div>
+{% else %}
+<div class="show-list">
+{% for show in shows %}
+  <div class="show-item">
+    <div class="show-header" onclick="toggleShow(this)"
+      hx-get="/browse/shows/{{ show.rating_key }}/seasons"
+      hx-target="#seasons-{{ show.rating_key }}"
+      hx-swap="innerHTML"
+      hx-trigger="click once">
+      <span>&#128250;</span>
+      <span class="show-title-text">{{ show.title }}</span>
+      {% if let Some(y) = show.year %}<span class="show-meta">{{ y }}</span>{% endif %}
+      {% if let Some(lc) = show.leaf_count %}<span class="show-meta">{{ lc }} ep</span>{% endif %}
+      {% if show.is_synced %}<span class="badge badge-green">&#10003;</span>{% endif %}
+      <span class="show-arrow" style="color:#555;">&#9658;</span>
+    </div>
+    <div id="seasons-{{ show.rating_key }}" class="show-episodes" style="display:none;"></div>
+  </div>
+{% endfor %}
+{% if shows.is_empty() %}
+<p style="color:#666;text-align:center;padding:40px 0;">
+  No shows found. Check your home server in <a href="/settings">Settings</a>.
+</p>
+{% endif %}
+</div>
+{% endif %}
+</div>
+
+<script>
+function setTab(el) {
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  el.classList.add('active');
+}
+function toggleShow(header) {
+  var item = header.closest('.show-item');
+  var panel = item.querySelector('.show-episodes');
+  var arrow = header.querySelector('.show-arrow');
+  if (panel.style.display === 'none') {
+    panel.style.display = 'block';
+    if (arrow) arrow.innerHTML = '&#9660;';
+  } else {
+    panel.style.display = 'none';
+    if (arrow) arrow.innerHTML = '&#9658;';
+  }
+}
+</script>
+{% endblock %}
