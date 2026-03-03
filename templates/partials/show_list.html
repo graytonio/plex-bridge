@@ -6,7 +6,11 @@
       hx-target="#seasons-{{ show.rating_key }}"
       hx-swap="innerHTML"
       hx-trigger="click once">
+      {% if show.thumb.is_some() %}
+      <img class="show-thumb" src="/browse/thumbnail?path={{ show.thumb_str() }}" loading="lazy" alt="">
+      {% else %}
       <span>&#128250;</span>
+      {% endif %}
       <span class="show-title-text">{{ show.title }}</span>
       {% if let Some(y) = show.year %}<span class="show-meta">{{ y }}</span>{% endif %}
       {% if let Some(lc) = show.leaf_count %}<span class="show-meta">{{ lc }} ep</span>{% endif %}
@@ -22,17 +26,3 @@
 </p>
 {% endif %}
 </div>
-<script>
-function toggleShow(header) {
-  var item = header.closest('.show-item');
-  var panel = item.querySelector('.show-episodes');
-  var arrow = header.querySelector('.show-arrow');
-  if (panel.style.display === 'none') {
-    panel.style.display = 'block';
-    if (arrow) arrow.innerHTML = '&#9660;';
-  } else {
-    panel.style.display = 'none';
-    if (arrow) arrow.innerHTML = '&#9658;';
-  }
-}
-</script>

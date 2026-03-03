@@ -100,6 +100,27 @@ impl PlexClient {
     pub fn download_url(&self, file_key: &str) -> String {
         format!("{}{}?X-Plex-Token={}", self.base_url, file_key, self.token)
     }
+
+    pub async fn get_image_bytes(&self, path: &str) -> Result<(bytes::Bytes, String)> {
+        let url = format!("{}{}", self.base_url, path);
+        let resp = self
+            .client
+            .get(&url)
+            .header("X-Plex-Token", &self.token)
+            .send()
+            .await
+            .context("Thumbnail request failed")?
+            .error_for_status()
+            .context("Plex thumbnail error")?;
+        let content_type = resp
+            .headers()
+            .get("content-type")
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("image/jpeg")
+            .to_string();
+        let data = resp.bytes().await.context("Failed to read thumbnail bytes")?;
+        Ok((data, content_type))
+    }
 }
 
 fn extract_metadata(json: &Value) -> Vec<PlexMetadata> {

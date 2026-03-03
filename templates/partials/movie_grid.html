@@ -2,7 +2,11 @@
 {% for movie in movies %}
   <div class="movie-card {% if movie.is_synced %}synced{% endif %}">
     {% if movie.is_synced %}<div class="synced-badge">&#10003; Synced</div>{% endif %}
+    {% if movie.thumb.is_some() %}
+    <img class="movie-poster" src="/browse/thumbnail?path={{ movie.thumb_str() }}" loading="lazy" alt="{{ movie.title }}">
+    {% else %}
     <div class="movie-poster-placeholder">&#127916;</div>
+    {% endif %}
     <div class="movie-info">
       <div class="movie-title">{{ movie.title }}</div>
       <div class="movie-meta">

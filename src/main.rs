@@ -66,6 +66,7 @@ async fn main() -> anyhow::Result<()> {
             "/browse/shows/:id/seasons",
             get(routes::browse::get_show_seasons),
         )
+        .route("/browse/thumbnail", get(routes::browse::get_thumbnail))
         .route("/queue", post(routes::queue::post_queue))
         .route("/queue/list", get(routes::queue::get_queue_list))
         .route("/queue/stats", get(routes::dashboard::get_queue_stats))

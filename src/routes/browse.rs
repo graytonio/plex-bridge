@@ -2,9 +2,10 @@ use std::sync::Arc;
 
 use askama::Template;
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     response::{IntoResponse, Redirect, Response},
 };
+use serde::Deserialize;
 
 use crate::error::Result;
 use crate::models::config::fetch_config;
@@ -17,8 +18,6 @@ use crate::state::AppState;
 #[template(path = "browse.html")]
 struct BrowseTemplate {
     tab: String,
-    movies: Vec<PlexMetadataView>,
-    shows: Vec<PlexMetadataView>,
 }
 
 #[derive(Template)]
@@ -52,6 +51,7 @@ pub struct PlexMetadataView {
     pub file_size: i64,
     pub file_key: Option<String>,
     pub is_synced: bool,
+    pub thumb: Option<String>,
 }
 
 impl PlexMetadataView {
@@ -72,6 +72,7 @@ impl PlexMetadataView {
             file_size,
             file_key,
             is_synced,
+            thumb: m.thumb,
         }
     }
 
@@ -109,6 +110,10 @@ impl PlexMetadataView {
 
     pub fn file_key_str(&self) -> &str {
         self.file_key.as_deref().unwrap_or("")
+    }
+
+    pub fn thumb_str(&self) -> &str {
+        self.thumb.as_deref().unwrap_or("")
     }
 
     pub fn has_grandparent(&self) -> bool {
@@ -152,34 +157,8 @@ pub async fn get_browse(State(state): State<Arc<AppState>>) -> Result<Response> 
         return Ok(Redirect::to("/settings").into_response());
     }
 
-    let client = get_plex_client(&state).await?;
-    let synced_keys = completed_rating_keys(&state.db).await?;
-
-    let movies_raw = if let Some(sid) = find_section(&client, "movie").await {
-        client.movies(&sid).await.unwrap_or_default()
-    } else {
-        vec![]
-    };
-
-    let shows_raw = if let Some(sid) = find_section(&client, "show").await {
-        client.shows(&sid).await.unwrap_or_default()
-    } else {
-        vec![]
-    };
-
-    let movies = movies_raw
-        .into_iter()
-        .map(|m| PlexMetadataView::from_metadata(m, &synced_keys))
-        .collect();
-    let shows = shows_raw
-        .into_iter()
-        .map(|m| PlexMetadataView::from_metadata(m, &synced_keys))
-        .collect();
-
     Ok(BrowseTemplate {
         tab: "movies".to_string(),
-        movies,
-        shows,
     }
     .into_response())
 }
@@ -248,6 +227,30 @@ pub async fn get_show_seasons(
     .into_response())
 }
 
+#[derive(Deserialize)]
+pub struct ThumbnailQuery {
+    path: String,
+}
+
+pub async fn get_thumbnail(
+    State(state): State<Arc<AppState>>,
+    Query(query): Query<ThumbnailQuery>,
+) -> Result<Response> {
+    let client = get_plex_client(&state).await?;
+    let (data, content_type) = client.get_image_bytes(&query.path).await?;
+    Ok((
+        [
+            (axum::http::header::CONTENT_TYPE, content_type),
+            (
+                axum::http::header::CACHE_CONTROL,
+                "public, max-age=86400".to_string(),
+            ),
+        ],
+        data,
+    )
+        .into_response())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -272,6 +275,7 @@ mod tests {
             file_size,
             file_key: file_key.map(str::to_string),
             is_synced: false,
+            thumb: None,
         }
     }
 
