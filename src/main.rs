@@ -28,8 +28,7 @@ async fn main() -> anyhow::Result<()> {
 
     tracing_subscriber::fmt()
         .with_env_filter(
-            EnvFilter::try_from_env("PLEXBRIDGE_LOG")
-                .unwrap_or_else(|_| EnvFilter::new("info")),
+            EnvFilter::try_from_env("PLEXBRIDGE_LOG").unwrap_or_else(|_| EnvFilter::new("info")),
         )
         .init();
 
@@ -63,7 +62,10 @@ async fn main() -> anyhow::Result<()> {
         .route("/browse", get(routes::browse::get_browse))
         .route("/browse/movies", get(routes::browse::get_movies))
         .route("/browse/shows", get(routes::browse::get_shows))
-        .route("/browse/shows/:id/seasons", get(routes::browse::get_show_seasons))
+        .route(
+            "/browse/shows/:id/seasons",
+            get(routes::browse::get_show_seasons),
+        )
         .route("/queue", post(routes::queue::post_queue))
         .route("/queue/list", get(routes::queue::get_queue_list))
         .route("/queue/stats", get(routes::dashboard::get_queue_stats))

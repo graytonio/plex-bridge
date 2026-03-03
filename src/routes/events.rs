@@ -3,10 +3,7 @@ use std::time::Duration;
 
 use axum::{
     extract::State,
-    response::{
-        sse::{Event, KeepAlive, Sse},
-        IntoResponse,
-    },
+    response::sse::{Event, KeepAlive, Sse},
 };
 use futures_util::stream::Stream;
 use tracing::warn;
@@ -152,7 +149,10 @@ mod tests {
     #[test]
     fn render_has_hx_swap_oob() {
         let html = render_progress_event(&make_event(1, 0, 0, 0.0, "queued"));
-        assert!(html.contains(r#"hx-swap-oob="true""#), "Expected hx-swap-oob: {html}");
+        assert!(
+            html.contains(r#"hx-swap-oob="true""#),
+            "Expected hx-swap-oob: {html}"
+        );
     }
 
     #[test]
@@ -203,14 +203,23 @@ mod tests {
         let mut ev = make_event(1, 0, 100, 0.0, "failed");
         ev.error_message = Some("connection refused".to_string());
         let html = render_progress_event(&ev);
-        assert!(html.contains("error-msg"), "Expected error-msg class: {html}");
-        assert!(html.contains("connection refused"), "Expected error text: {html}");
+        assert!(
+            html.contains("error-msg"),
+            "Expected error-msg class: {html}"
+        );
+        assert!(
+            html.contains("connection refused"),
+            "Expected error text: {html}"
+        );
     }
 
     #[test]
     fn render_no_error_html_when_error_absent() {
         let html = render_progress_event(&make_event(1, 0, 100, 0.0, "downloading"));
-        assert!(!html.contains("error-msg"), "Should not have error-msg: {html}");
+        assert!(
+            !html.contains("error-msg"),
+            "Should not have error-msg: {html}"
+        );
     }
 
     #[test]
@@ -222,6 +231,9 @@ mod tests {
     #[test]
     fn render_shows_status_label_in_badge() {
         let html = render_progress_event(&make_event(1, 0, 100, 0.0, "downloading"));
-        assert!(html.contains("downloading"), "Expected status label: {html}");
+        assert!(
+            html.contains("downloading"),
+            "Expected status label: {html}"
+        );
     }
 }

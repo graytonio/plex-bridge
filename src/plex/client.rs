@@ -22,7 +22,8 @@ impl PlexClient {
 
     async fn get_json(&self, path: &str) -> Result<Value> {
         let url = format!("{}{}", self.base_url, path);
-        let resp = self.client
+        let resp = self
+            .client
             .get(&url)
             .header("X-Plex-Token", &self.token)
             .header("Accept", "application/json")
@@ -50,7 +51,8 @@ impl PlexClient {
             .as_array()
             .cloned()
             .unwrap_or_default();
-        let sections: Vec<PlexMetadata> = dirs.into_iter()
+        let sections: Vec<PlexMetadata> = dirs
+            .into_iter()
             .filter_map(|v| serde_json::from_value(v).ok())
             .collect();
         Ok(sections)
@@ -104,7 +106,8 @@ fn extract_metadata(json: &Value) -> Vec<PlexMetadata> {
     // Try Metadata first, then Video, then Directory
     for key in &["Metadata", "Video", "Directory"] {
         if let Some(arr) = json["MediaContainer"][key].as_array() {
-            let items: Vec<PlexMetadata> = arr.iter()
+            let items: Vec<PlexMetadata> = arr
+                .iter()
                 .filter_map(|v| serde_json::from_value(v.clone()).ok())
                 .collect();
             if !items.is_empty() {
@@ -152,7 +155,10 @@ mod tests {
     fn download_url_builds_correct_url() {
         let c = PlexClient::new("http://server:32400", "abc123");
         let url = c.download_url("/library/parts/9876/file.mkv");
-        assert_eq!(url, "http://server:32400/library/parts/9876/file.mkv?X-Plex-Token=abc123");
+        assert_eq!(
+            url,
+            "http://server:32400/library/parts/9876/file.mkv?X-Plex-Token=abc123"
+        );
     }
 
     #[test]
@@ -166,7 +172,10 @@ mod tests {
     fn download_url_includes_token_as_query_param() {
         let c = PlexClient::new("http://server:32400", "secret-token");
         let url = c.download_url("/parts/1");
-        assert!(url.contains("X-Plex-Token=secret-token"), "Token missing from URL: {url}");
+        assert!(
+            url.contains("X-Plex-Token=secret-token"),
+            "Token missing from URL: {url}"
+        );
     }
 
     // ── extract_metadata ─────────────────────────────────────────────────────

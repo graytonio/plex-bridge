@@ -132,7 +132,10 @@ async fn get_plex_client(state: &Arc<AppState>) -> Result<PlexClient> {
     let config = fetch_config(&state.db)
         .await?
         .ok_or_else(|| crate::error::AppError::BadRequest("Not configured".into()))?;
-    Ok(PlexClient::new(&config.home_server_url, &config.home_plex_token))
+    Ok(PlexClient::new(
+        &config.home_server_url,
+        &config.home_plex_token,
+    ))
 }
 
 async fn find_section(client: &PlexClient, section_type: &str) -> Option<String> {
@@ -145,11 +148,7 @@ async fn find_section(client: &PlexClient, section_type: &str) -> Option<String>
 
 pub async fn get_browse(State(state): State<Arc<AppState>>) -> Result<Response> {
     let config = fetch_config(&state.db).await?;
-    if config
-        .as_ref()
-        .map(|c| !c.is_configured())
-        .unwrap_or(true)
-    {
+    if config.as_ref().map(|c| !c.is_configured()).unwrap_or(true) {
         return Ok(Redirect::to("/settings").into_response());
     }
 
@@ -377,7 +376,10 @@ mod tests {
 
     #[test]
     fn human_size_negative_returns_dash() {
-        assert_eq!(make_view("rk", -1, None, None, None, None).human_size(), "—");
+        assert_eq!(
+            make_view("rk", -1, None, None, None, None).human_size(),
+            "—"
+        );
     }
 
     #[test]
@@ -397,34 +399,52 @@ mod tests {
 
     #[test]
     fn season_label_zero_pads_single_digit() {
-        assert_eq!(make_view("rk", 0, None, None, Some(3), None).season_label(), "S03");
+        assert_eq!(
+            make_view("rk", 0, None, None, Some(3), None).season_label(),
+            "S03"
+        );
     }
 
     #[test]
     fn season_label_double_digit() {
-        assert_eq!(make_view("rk", 0, None, None, Some(12), None).season_label(), "S12");
+        assert_eq!(
+            make_view("rk", 0, None, None, Some(12), None).season_label(),
+            "S12"
+        );
     }
 
     #[test]
     fn season_label_unknown_when_none() {
-        assert_eq!(make_view("rk", 0, None, None, None, None).season_label(), "S??");
+        assert_eq!(
+            make_view("rk", 0, None, None, None, None).season_label(),
+            "S??"
+        );
     }
 
     // ── episode_label ────────────────────────────────────────────────────────
 
     #[test]
     fn episode_label_zero_pads_single_digit() {
-        assert_eq!(make_view("rk", 0, None, Some(7), None, None).episode_label(), "E07");
+        assert_eq!(
+            make_view("rk", 0, None, Some(7), None, None).episode_label(),
+            "E07"
+        );
     }
 
     #[test]
     fn episode_label_double_digit() {
-        assert_eq!(make_view("rk", 0, None, Some(14), None, None).episode_label(), "E14");
+        assert_eq!(
+            make_view("rk", 0, None, Some(14), None, None).episode_label(),
+            "E14"
+        );
     }
 
     #[test]
     fn episode_label_unknown_when_none() {
-        assert_eq!(make_view("rk", 0, None, None, None, None).episode_label(), "E??");
+        assert_eq!(
+            make_view("rk", 0, None, None, None, None).episode_label(),
+            "E??"
+        );
     }
 
     // ── has_file / file_key_str ───────────────────────────────────────────────
@@ -449,7 +469,10 @@ mod tests {
 
     #[test]
     fn file_key_str_empty_when_none() {
-        assert_eq!(make_view("rk", 0, None, None, None, None).file_key_str(), "");
+        assert_eq!(
+            make_view("rk", 0, None, None, None, None).file_key_str(),
+            ""
+        );
     }
 
     // ── has_grandparent / grandparent_str ────────────────────────────────────
@@ -484,7 +507,10 @@ mod tests {
 
     #[test]
     fn season_num_returns_parent_index() {
-        assert_eq!(make_view("rk", 0, None, None, Some(4), None).season_num(), 4);
+        assert_eq!(
+            make_view("rk", 0, None, None, Some(4), None).season_num(),
+            4
+        );
     }
 
     #[test]
@@ -494,7 +520,10 @@ mod tests {
 
     #[test]
     fn episode_num_returns_index() {
-        assert_eq!(make_view("rk", 0, None, Some(12), None, None).episode_num(), 12);
+        assert_eq!(
+            make_view("rk", 0, None, Some(12), None, None).episode_num(),
+            12
+        );
     }
 
     #[test]

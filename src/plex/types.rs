@@ -66,15 +66,12 @@ impl PlexMetadata {
     }
 
     pub fn file_name(&self) -> Option<String> {
-        self.media
-            .first()
-            .and_then(|m| m.parts.first())
-            .map(|p| {
-                let path = std::path::Path::new(&p.file);
-                path.file_name()
-                    .map(|n| n.to_string_lossy().to_string())
-                    .unwrap_or_else(|| p.file.clone())
-            })
+        self.media.first().and_then(|m| m.parts.first()).map(|p| {
+            let path = std::path::Path::new(&p.file);
+            path.file_name()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_else(|| p.file.clone())
+        })
     }
 }
 

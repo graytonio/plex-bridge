@@ -84,9 +84,6 @@ pub async fn test_connection(Form(form): Form<TestForm>) -> Response {
             r#"<div class="test-result success">✓ Connected: {name}</div>"#
         ))
         .into_response(),
-        Err(e) => Html(format!(
-            r#"<div class="test-result error">✗ {e}</div>"#
-        ))
-        .into_response(),
+        Err(e) => Html(format!(r#"<div class="test-result error">✗ {e}</div>"#)).into_response(),
     }
 }

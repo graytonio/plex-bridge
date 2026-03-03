@@ -39,7 +39,9 @@ pub async fn process_single_job(state: Arc<AppState>, job_id: i64) -> Result<()>
 
     // Create cancellation token for this job
     let cancel_token = CancellationToken::new();
-    state.cancellation_tokens.insert(job_id, cancel_token.clone());
+    state
+        .cancellation_tokens
+        .insert(job_id, cancel_token.clone());
 
     let result = download_file(&state, &job, &config, &cancel_token).await;
 
