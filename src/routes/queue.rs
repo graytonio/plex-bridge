@@ -73,10 +73,7 @@ pub async fn post_queue(
     Ok(QueueListTemplate { jobs }.into_response())
 }
 
-fn build_destination_path(
-    config: &crate::models::config::Config,
-    form: &QueueForm,
-) -> String {
+fn build_destination_path(config: &crate::models::config::Config, form: &QueueForm) -> String {
     let safe_title = sanitize_filename(&form.title);
 
     if form.media_type == "movie" {
@@ -163,7 +160,10 @@ mod tests {
 
     #[test]
     fn sanitize_filename_replaces_colon() {
-        assert_eq!(sanitize_filename("Mission: Impossible"), "Mission_ Impossible");
+        assert_eq!(
+            sanitize_filename("Mission: Impossible"),
+            "Mission_ Impossible"
+        );
     }
 
     #[test]
@@ -249,7 +249,10 @@ mod tests {
     #[test]
     fn movie_path_sanitizes_colon_in_title() {
         let path = build_destination_path(&movie_config(), &movie_form("Mission: Impossible"));
-        assert_eq!(path, "/media/Movies/Mission_ Impossible/Mission_ Impossible.mkv");
+        assert_eq!(
+            path,
+            "/media/Movies/Mission_ Impossible/Mission_ Impossible.mkv"
+        );
     }
 
     #[test]
@@ -273,7 +276,10 @@ mod tests {
             &movie_config(),
             &episode_form("Ozymandias", "Breaking Bad", Some(5), Some(14)),
         );
-        assert_eq!(path, "/media/TV/Breaking Bad/Season 05/S05E14 - Ozymandias.mkv");
+        assert_eq!(
+            path,
+            "/media/TV/Breaking Bad/Season 05/S05E14 - Ozymandias.mkv"
+        );
     }
 
     #[test]
@@ -316,7 +322,10 @@ mod tests {
             &movie_config(),
             &episode_form("Title: Subtitle", "My Show", Some(2), Some(3)),
         );
-        assert_eq!(path, "/media/TV/My Show/Season 02/S02E03 - Title_ Subtitle.mkv");
+        assert_eq!(
+            path,
+            "/media/TV/My Show/Season 02/S02E03 - Title_ Subtitle.mkv"
+        );
     }
 
     #[test]
@@ -325,6 +334,9 @@ mod tests {
             &movie_config(),
             &episode_form("Ep", "Show", Some(1), Some(1)),
         );
-        assert!(path.starts_with("/media/TV/"), "Expected /media/TV/ prefix: {path}");
+        assert!(
+            path.starts_with("/media/TV/"),
+            "Expected /media/TV/ prefix: {path}"
+        );
     }
 }

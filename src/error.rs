@@ -16,11 +16,17 @@ impl IntoResponse for AppError {
         let (status, message) = match self {
             AppError::Sqlx(e) => {
                 tracing::error!("Database error: {e}");
-                (StatusCode::INTERNAL_SERVER_ERROR, format!("Database error: {e}"))
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Database error: {e}"),
+                )
             }
             AppError::Anyhow(e) => {
                 tracing::error!("Internal error: {e}");
-                (StatusCode::INTERNAL_SERVER_ERROR, format!("Internal error: {e}"))
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Internal error: {e}"),
+                )
             }
             AppError::NotFound(msg) => (StatusCode::NOT_FOUND, msg),
             AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),

@@ -32,11 +32,7 @@ struct QueueStatsTemplate {
 
 pub async fn get_dashboard(State(state): State<Arc<AppState>>) -> Result<Response> {
     let config = fetch_config(&state.db).await?;
-    if config
-        .as_ref()
-        .map(|c| !c.is_configured())
-        .unwrap_or(true)
-    {
+    if config.as_ref().map(|c| !c.is_configured()).unwrap_or(true) {
         return Ok(Redirect::to("/settings").into_response());
     }
 

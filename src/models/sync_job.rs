@@ -165,12 +165,8 @@ pub async fn insert_job(db: &DbPool, job: &InsertJob) -> Result<i64> {
 pub async fn list_jobs(db: &DbPool) -> Result<Vec<SyncJob>> {
     let sql = "SELECT id, plex_rating_key, media_type, title, show_title, season_number, episode_number, file_size_bytes, destination_path, source_url, status, bytes_downloaded, error_message, created_at, updated_at FROM sync_jobs ORDER BY created_at DESC";
     let jobs = match db {
-        DbPool::Sqlite(pool) => {
-            sqlx::query_as::<_, SyncJob>(sql).fetch_all(pool).await?
-        }
-        DbPool::Postgres(pool) => {
-            sqlx::query_as::<_, SyncJob>(sql).fetch_all(pool).await?
-        }
+        DbPool::Sqlite(pool) => sqlx::query_as::<_, SyncJob>(sql).fetch_all(pool).await?,
+        DbPool::Postgres(pool) => sqlx::query_as::<_, SyncJob>(sql).fetch_all(pool).await?,
     };
     Ok(jobs)
 }
@@ -201,11 +197,13 @@ pub async fn update_job_status(db: &DbPool, id: i64, status: JobStatus) -> Resul
     let s = status.as_str();
     match db {
         DbPool::Sqlite(pool) => {
-            sqlx::query("UPDATE sync_jobs SET status = ?, updated_at = datetime('now') WHERE id = ?")
-                .bind(s)
-                .bind(id)
-                .execute(pool)
-                .await?;
+            sqlx::query(
+                "UPDATE sync_jobs SET status = ?, updated_at = datetime('now') WHERE id = ?",
+            )
+            .bind(s)
+            .bind(id)
+            .execute(pool)
+            .await?;
         }
         DbPool::Postgres(pool) => {
             sqlx::query("UPDATE sync_jobs SET status = $1, updated_at = NOW() WHERE id = $2")
@@ -228,11 +226,13 @@ pub async fn update_job_progress(db: &DbPool, id: i64, bytes_downloaded: i64) ->
                 .await?;
         }
         DbPool::Postgres(pool) => {
-            sqlx::query("UPDATE sync_jobs SET bytes_downloaded = $1, updated_at = NOW() WHERE id = $2")
-                .bind(bytes_downloaded)
-                .bind(id)
-                .execute(pool)
-                .await?;
+            sqlx::query(
+                "UPDATE sync_jobs SET bytes_downloaded = $1, updated_at = NOW() WHERE id = $2",
+            )
+            .bind(bytes_downloaded)
+            .bind(id)
+            .execute(pool)
+            .await?;
         }
     }
     Ok(())
@@ -401,7 +401,11 @@ mod tests {
         let mut job = movie_job();
         for (s, expected) in statuses {
             job.status = s.into();
-            assert_eq!(job.status_enum(), expected, "status_enum mismatch for '{s}'");
+            assert_eq!(
+                job.status_enum(),
+                expected,
+                "status_enum mismatch for '{s}'"
+            );
         }
     }
 
@@ -665,11 +669,15 @@ mod tests {
         let db = create_test_db().await;
         let id = insert_job(&db, &insert_job_fixture()).await.unwrap();
 
-        update_job_status(&db, id, JobStatus::Downloading).await.unwrap();
+        update_job_status(&db, id, JobStatus::Downloading)
+            .await
+            .unwrap();
         let job = get_job(&db, id).await.unwrap().unwrap();
         assert_eq!(job.status, "downloading");
 
-        update_job_status(&db, id, JobStatus::Complete).await.unwrap();
+        update_job_status(&db, id, JobStatus::Complete)
+            .await
+            .unwrap();
         let job = get_job(&db, id).await.unwrap().unwrap();
         assert_eq!(job.status, "complete");
     }
@@ -689,7 +697,9 @@ mod tests {
         let db = create_test_db().await;
         let id = insert_job(&db, &insert_job_fixture()).await.unwrap();
 
-        update_job_error(&db, id, "connection timed out").await.unwrap();
+        update_job_error(&db, id, "connection timed out")
+            .await
+            .unwrap();
         let job = get_job(&db, id).await.unwrap().unwrap();
         assert_eq!(job.status, "failed");
         assert_eq!(job.error_message.as_deref(), Some("connection timed out"));
@@ -709,7 +719,9 @@ mod tests {
     async fn cancel_job_when_downloading_sets_cancelled() {
         let db = create_test_db().await;
         let id = insert_job(&db, &insert_job_fixture()).await.unwrap();
-        update_job_status(&db, id, JobStatus::Downloading).await.unwrap();
+        update_job_status(&db, id, JobStatus::Downloading)
+            .await
+            .unwrap();
 
         cancel_job(&db, id).await.unwrap();
         let job = get_job(&db, id).await.unwrap().unwrap();
@@ -720,7 +732,9 @@ mod tests {
     async fn cancel_job_when_complete_does_not_change_status() {
         let db = create_test_db().await;
         let id = insert_job(&db, &insert_job_fixture()).await.unwrap();
-        update_job_status(&db, id, JobStatus::Complete).await.unwrap();
+        update_job_status(&db, id, JobStatus::Complete)
+            .await
+            .unwrap();
 
         cancel_job(&db, id).await.unwrap();
         let job = get_job(&db, id).await.unwrap().unwrap();
@@ -745,7 +759,9 @@ mod tests {
         let id_queued = insert_job(&db, &insert_job_fixture()).await.unwrap();
         let id_failed = insert_job(&db, &insert_job_fixture()).await.unwrap();
 
-        update_job_status(&db, id_complete, JobStatus::Complete).await.unwrap();
+        update_job_status(&db, id_complete, JobStatus::Complete)
+            .await
+            .unwrap();
         update_job_error(&db, id_failed, "err").await.unwrap();
 
         clear_completed_jobs(&db).await.unwrap();
@@ -787,12 +803,16 @@ mod tests {
         let mut job1 = insert_job_fixture();
         job1.plex_rating_key = "key-complete-1".into();
         let id1 = insert_job(&db, &job1).await.unwrap();
-        update_job_status(&db, id1, JobStatus::Complete).await.unwrap();
+        update_job_status(&db, id1, JobStatus::Complete)
+            .await
+            .unwrap();
 
         let mut job2 = insert_job_fixture();
         job2.plex_rating_key = "key-complete-2".into();
         let id2 = insert_job(&db, &job2).await.unwrap();
-        update_job_status(&db, id2, JobStatus::Complete).await.unwrap();
+        update_job_status(&db, id2, JobStatus::Complete)
+            .await
+            .unwrap();
 
         let mut job3 = insert_job_fixture();
         job3.plex_rating_key = "key-queued".into();

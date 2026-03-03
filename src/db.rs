@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
-use sqlx::{Pool, Postgres, Sqlite};
 use sqlx::sqlite::SqliteConnectOptions;
+use sqlx::{Pool, Postgres, Sqlite};
 use std::str::FromStr;
 
 #[derive(Debug)]
@@ -81,7 +81,10 @@ mod tests {
         let result = DbPool::connect("mysql://localhost/db").await;
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("Unsupported"), "Expected 'Unsupported' in: {msg}");
+        assert!(
+            msg.contains("Unsupported"),
+            "Expected 'Unsupported' in: {msg}"
+        );
     }
 
     #[tokio::test]
@@ -90,11 +93,10 @@ mod tests {
         // Verify we can query the migrated schema
         match &db {
             DbPool::Sqlite(pool) => {
-                let count: (i64,) =
-                    sqlx::query_as("SELECT COUNT(*) FROM config")
-                        .fetch_one(pool)
-                        .await
-                        .expect("config table should exist after migration");
+                let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM config")
+                    .fetch_one(pool)
+                    .await
+                    .expect("config table should exist after migration");
                 assert_eq!(count.0, 0);
             }
             _ => panic!("Expected Sqlite variant"),
@@ -106,11 +108,10 @@ mod tests {
         let db = create_test_db().await;
         match &db {
             DbPool::Sqlite(pool) => {
-                let count: (i64,) =
-                    sqlx::query_as("SELECT COUNT(*) FROM sync_jobs")
-                        .fetch_one(pool)
-                        .await
-                        .expect("sync_jobs table should exist after migration");
+                let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM sync_jobs")
+                    .fetch_one(pool)
+                    .await
+                    .expect("sync_jobs table should exist after migration");
                 assert_eq!(count.0, 0);
             }
             _ => panic!("Expected Sqlite variant"),
